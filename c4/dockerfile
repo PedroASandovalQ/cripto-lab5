@@ -1,0 +1,21 @@
+# Dockerfile for Ubuntu 22.10
+FROM ubuntu:22.10
+
+# Update sources.list to use old-releases repository
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://old-releases.ubuntu.com/ubuntu|g' /etc/apt/sources.list && \
+    sed -i '/^deb.*security.ubuntu.com/s/^/#/' /etc/apt/sources.list
+
+# Update package lists and install necessary packages
+RUN apt-get update && \
+    apt-get install -y sudo net-tools openssh-client openssh-server wireshark tshark && \
+    useradd -m -s /bin/bash test && echo 'test:test' | chpasswd && adduser test sudo
+
+# Enable root login and password authentication for SSH
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config
+
+# Expose SSH port
+EXPOSE 22
+
+# Start SSH service
+CMD ["/usr/sbin/sshd", "-D"]
